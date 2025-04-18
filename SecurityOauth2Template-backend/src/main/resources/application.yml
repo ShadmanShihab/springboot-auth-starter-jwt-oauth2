@@ -1,0 +1,61 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springsecuritydb
+    username: root
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # or "create" or "create-drop"
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect # Explicitly set the dialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: profile, email
+          # github:
+          #   client-id: YOUR_GITHUB_CLIENT_ID
+          #   client-secret: YOUR_GITHUB_CLIENT_SECRET
+          #   scope:
+          #     - user:email
+          # facebook:
+          #   client-id: YOUR_FACEBOOK_CLIENT_ID
+          #   client-secret: YOUR_FACEBOOK_CLIENT_SECRET
+          #   scope:
+          #     - public_profile
+          #     - email
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: id
+          facebook:
+            authorization-uri: https://www.facebook.com/v18.0/dialog/oauth
+            token-uri: https://graph.facebook.com/v18.0/oauth/access_token
+            user-info-uri: https://graph.facebook.com/v18.0/me?fields=id,name,email
+            user-name-attribute: id
+
+jwt:
+  secret: cqPk6TeE/XyqKUhpWUxEYCuyPBxScCLRrb2YyE+5oTg=
+  refresh:
+    secret: JjVZ4j2F7l+5EwPcbKD8q9f6YXwL5mUq+3x1QqDsR2E=
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+server:
+  port: 8082
+
+frontend:
+  redirect:
+    uri: http://localhost:5173/oauth2/callback
