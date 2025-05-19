@@ -8,7 +8,6 @@ function OAuthCallback() {
 
   useEffect(() => {
     (async () => { 
-        debugger;
       const params = new URLSearchParams(location.search);
       const code = params.get('code');
       const codeVerifier = localStorage.getItem('verifier');

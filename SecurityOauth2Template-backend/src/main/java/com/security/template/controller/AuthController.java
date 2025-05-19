@@ -11,6 +11,8 @@ import com.security.template.model.UserRole;
 import com.security.template.repository.RoleRepository;
 import com.security.template.repository.UserRepository;
 import com.security.template.repository.UserRoleRepository;
+import com.security.template.service.EmailService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +47,8 @@ public class AuthController {
     private RoleRepository roleRepository;
     @Autowired
     private UserRoleRepository userRoleRepository;
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
@@ -114,4 +119,56 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid refresh token"));
         }
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@PathVariable String email) {
+        // Validate the email format
+        if (email == null || email.trim().isEmpty() || !emailService.isValidEmail(email)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid email address."));
+        }
+
+        // Check if the user exists in the database
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String resetLink = jwtUtil.generatePasswordResetToken(user);
+
+            // Send the email with the reset link
+            String subject = "Password Reset Request";
+            String text = "To reset your password, click the link below:\n" + resetLink;
+            emailService.sendSimpleMessage(email, subject, text);
+
+            return ResponseEntity.ok(Map.of("message", "Password reset link sent to your email."));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
+        }
+    }
+
+    // @PostMapping("/reset-password")
+    // public ResponseEntity<?> resetPassword(@PathVariable String token, @PathVariable String newPassword) {
+    //     // Validate the token and extract the email (you can implement this method)
+    //     String email = jwtUtil.extractEmailFromToken(token);
+
+    //     if (email == null) {
+    //         return ResponseEntity.badRequest().body(Map.of("error", "Invalid token."));
+    //     }
+
+    //     // Find the user by email
+    //     Optional<User> userOptional = userRepository.findByEmail(email);
+    //     if (userOptional.isPresent()) {
+    //         User user = userOptional.get();
+    //         user.setPassword(passwordEncoder.encode(newPassword));
+    //         userRepository.save(user);
+
+    //         return ResponseEntity.ok(Map.of("message", "Password reset successfully."));
+    //     } else {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
+    //     }
+    // // 1. Validate the email.
+    // if (email == null || email.trim().isEmpty() || !emailService.isValidEmail(email)) {
+    //     return ResponseEntity.badRequest().body(Map.of("error", "Invalid email format."));
+    // }
+
+    // }
+        
 }

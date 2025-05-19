@@ -1,7 +1,9 @@
 package com.security.template.auth.config;
 
+import com.security.template.model.PasswordResetToken;
 import com.security.template.model.User;
 import com.security.template.model.UserRole;
+import com.security.template.repository.PasswordResetTokenRepo;
 import com.security.template.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -15,14 +17,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.crypto.SecretKey;
+
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
+    @Value("${frontend.redirect.uri}")
+    private String frontendRedirectUri;
+
     @Value("${jwt.secret}")
     private String secret;
     @Value("${jwt.refresh.secret}")
@@ -32,6 +40,8 @@ public class JwtUtils {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    PasswordResetTokenRepo passwordResetTokenRepository;
 
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
@@ -123,5 +133,22 @@ public class JwtUtils {
 
     public String getRefreshSecret() {
         return refreshSecret;
+    }
+
+    public String generatePasswordResetToken(User user) {
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken passwordResetToken = PasswordResetToken.builder()
+                .token(token)
+                .user(user)
+                .expiryDate(LocalDateTime.now().plusHours(1)) // Token valid for 1 hour
+                .build();
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        String resetLink = UriComponentsBuilder.fromUriString(frontendRedirectUri)
+                .queryParam("token", token)
+                .build()
+                .toUriString();
+
+        return resetLink;
     }
 }

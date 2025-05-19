@@ -30,7 +30,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -54,17 +53,23 @@ public class SecurityConfig {
                         // Allow access to OAuth2 login and callback routes for everyone
                         .requestMatchers(new AntPathRequestMatcher("/api/oauth2/google/login")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/oauth2/google/token")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/oauth2/google/login/oauth2/code/google")).permitAll()
-                        //others
+                        .requestMatchers(new AntPathRequestMatcher("/api/oauth2/google/login/oauth2/code/google"))
+                        .permitAll()
+                        // others
                         .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher(" /forgot-password/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/test/hello")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).hasRole("ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/user/profile")).hasAnyRole("USER", "ADMIN")
-                        .anyRequest().authenticated()
-                );
-        //Custom Handler to show custom json response
+                        .requestMatchers(
+                                new AntPathRequestMatcher("/v3/api-docs/**"),
+                                new AntPathRequestMatcher("/swagger-ui/**"),
+                                new AntPathRequestMatcher("/swagger-ui.html"))
+                        .permitAll()
+                        .anyRequest().authenticated());
+        // Custom Handler to show custom json response
         http.httpBasic(hbc -> hbc.authenticationEntryPoint(new CustomBasicAuthenticationEntryPoint()));
-        //Custom Handler to show custom json response for unauthenticated requests
+        // Custom Handler to show custom json response for unauthenticated requests
         http.exceptionHandling(ehc -> ehc.accessDeniedHandler(new CustomAccessDeniedHandler()));
         http.addFilterBefore((Filter) jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -89,7 +94,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 

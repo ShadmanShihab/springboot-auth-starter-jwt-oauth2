@@ -89,7 +89,8 @@ public class GoogleOAuth2Strategy implements OAuth2ProviderStrategy {
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(clientRegistration.getProviderDetails().getTokenUri(), request, Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity(clientRegistration.getProviderDetails().getTokenUri(),
+         request, Map.class);
 
         if (response.getStatusCode() == HttpStatus.OK) {
             Map<String, Object> responseMap = response.getBody();
@@ -104,6 +105,7 @@ public class GoogleOAuth2Strategy implements OAuth2ProviderStrategy {
     @Override
     public ResponseEntity<?> exchangeCodeForToken(String code, String codeVerifier) {
         try {
+            //OAuth2 client details from google
             ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId("google");
             OAuth2AccessToken accessToken = getAccessToken(code, codeVerifier, clientRegistration);
             OAuth2UserRequest userRequest = new OAuth2UserRequest(clientRegistration, accessToken);
@@ -114,6 +116,7 @@ public class GoogleOAuth2Strategy implements OAuth2ProviderStrategy {
 
             oAuth2User = customOAuth2UserService.loadUser(userRequest);
 
+            //generating access token and refresh token from system
             String token = jwtUtil.generateAccessToken(oAuth2User);
             String refreshToken = jwtUtil.generateRefreshToken(oAuth2User);
             Map<String, String> response = new HashMap<>();

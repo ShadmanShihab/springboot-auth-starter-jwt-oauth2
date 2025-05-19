@@ -45,6 +45,7 @@ public class GoogleOAuth2Controller {
                 "response_type=code" +
                 "&client_id=" + googleClientId +
                 "&redirect_uri=" + "http://localhost:8082/api/oauth2/google/login/oauth2/code/google" +
+                // "&redirect_uri=" + "http://localhost:5173/oauth2/callback" +
                 "&scope=" + scopeString +
                 "&state=state_parameter_xyz" +
                 "&code_challenge=CODE_CHALLENGE_FROM_FRONTEND" + // Frontend will replace this
@@ -55,6 +56,11 @@ public class GoogleOAuth2Controller {
         return ResponseEntity.ok(response);
     }
 
+
+    /*
+    redirect_uri
+    After Google sign in, request will be redirected to this URI. 
+    */ 
     @GetMapping("/login/oauth2/code/google")
     public RedirectView googleCallback(String code, String state) {
         String redirectUri = frontendRedirectUri + "?code=" + code;
